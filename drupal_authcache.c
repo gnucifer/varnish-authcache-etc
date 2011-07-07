@@ -10,8 +10,8 @@
 #define DRUPAL_AUTHCACHE_SEPARATOR "."
 
 /*TODO: Have I managed my memory correctly? */
-//Important: We have checked in beforehand (in drupal_authcache.vcl) so that DRUPAL_AC cookie is set, this is perhaps not necessary or even a good thing to do
-//TODO: perhaps remove this check
+/*Important: We have checked in beforehand (in drupal_authcache.vcl) so that DRUPAL_AC cookie is set, this is perhaps not necessary or even a good thing to do */
+/*TODO: perhaps remove this check */
 const char *
 drupal_authcache_hash(const char *cookie_header, const char *client_ip) {
 	char *cookie_header_work;
@@ -49,10 +49,10 @@ drupal_authcache_hash(const char *cookie_header, const char *client_ip) {
 	storing an int in char we lose 4 bit per byte */
 	if(!drupal_ac_sum || strlen(drupal_ac_sum) != MD5_DIGEST_SIZE*2) {
 		free(cookie_header_work);
-		//openlog("drupal_authcache", 0, 0);
-		//syslog(LOG_MAKEPRI(LOG_USER, LOG_NOTICE), "return empty"); 
-		//closelog();
-		//Or return null?
+		/*openlog("drupal_authcache", 0, 0);
+		syslog(LOG_MAKEPRI(LOG_USER, LOG_NOTICE), "return empty"); 
+		closelog();
+		Or return null?*/
 		return NULL;
 	}
 
