@@ -34,7 +34,8 @@ C{
 		char *cookie_hdr = VRT_GetHdr(sp, HDR_REQ, "\007Cookie:");
 		if(strstr(cookie_hdr, "DRUPAL_AC=")) { 
 			char *auth_hash = (char*) (*drupal_authcache_hash)(cookie_hdr, VRT_IP_string(sp, VRT_r_client_ip(sp)));
-			if(strlen(auth_hash)) {
+			/*if something went wrong auth_hash sould be null*/
+			if(auth_hash) {
 				/* VRT_l_req_hash(sp, auth_hash); */
 				VRT_SetHdr(sp, HDR_REQ, "\021X-Drupal-AC-Hash:", auth_hash, vrt_magic_string_end);
 			}
@@ -44,7 +45,6 @@ C{
 }
 
 sub vcl_recv {
-	#TODO: use equals instead
 	if (req.url ~ "^/logout|^/user|^/node/(add|edit)" ) {
 		return (pass);
 	}
@@ -53,5 +53,18 @@ sub vcl_recv {
 sub vcl_fetch {
 	if(beresp.http.pragma ~ "no-cache") {
 		return (pass);
+	}
+}
+
+sub vcl_hash {
+	if(req.http.X-Drupal-AC-Hash) {
+		set req.hash += req.http.X-Drupal-AC-Hash;
+	}
+}
+
+sub vcl_fetch {
+	if(req.http.X-Drupal-AC-Hash){
+		set beresp.http.X-Drupal-AC-Hash = req.http.X-Drupal-AC-Hash;
+		set beresp.cacheable = true;
 	}
 }

@@ -10,6 +10,8 @@
 #define DRUPAL_AUTHCACHE_SEPARATOR "."
 
 /*TODO: Have I managed my memory correctly? */
+//Important: We have checked in beforehand (in drupal_authcache.vcl) so that DRUPAL_AC cookie is set, this is perhaps not necessary or even a good thing to do
+//TODO: perhaps remove this check
 const char *
 drupal_authcache_hash(const char *cookie_header, const char *client_ip) {
 	char *cookie_header_work;
@@ -26,10 +28,10 @@ drupal_authcache_hash(const char *cookie_header, const char *client_ip) {
 
 	cookie_header_work = strdup(cookie_header);
 
-	/*TODO: "; " is safe, wut? */
-	for(cookie = strtok_r(cookie_header_work, "; ", &cookie_header_pos);
+	/*TODO: this parsing is perhaps a bit ugly? */
+	for(cookie = strtok_r(cookie_header_work, ";,", &cookie_header_pos);
 			cookie != NULL;
-			cookie = strtok_r(NULL, "; ", &cookie_header_pos)) /*TODO: This looks pretty unsafe, what if more whitespace after ; or none? */
+			cookie = strtok_r(NULL, ";,", &cookie_header_pos))
 	{
 		if(
 				!strncmp(cookie, "DRUPAL_AC=", 10) &&
@@ -47,10 +49,11 @@ drupal_authcache_hash(const char *cookie_header, const char *client_ip) {
 	storing an int in char we lose 4 bit per byte */
 	if(!drupal_ac_sum || strlen(drupal_ac_sum) != MD5_DIGEST_SIZE*2) {
 		free(cookie_header_work);
-		openlog("drupal_authcache", 0, 0);
-		syslog(LOG_MAKEPRI(LOG_USER, LOG_NOTICE), "return empty"); 
-		closelog();
-		return "";
+		//openlog("drupal_authcache", 0, 0);
+		//syslog(LOG_MAKEPRI(LOG_USER, LOG_NOTICE), "return empty"); 
+		//closelog();
+		//Or return null?
+		return NULL;
 	}
 
 	/*also bail out if cookie has expired or expire value tampered with */
@@ -66,7 +69,7 @@ drupal_authcache_hash(const char *cookie_header, const char *client_ip) {
 		syslog(LOG_MAKEPRI(LOG_USER, LOG_NOTICE), "wrong time"); 
 		closelog();
 		
-		return "";
+		return NULL;
 	}
 
 	openlog("drupal_authcache", 0, 0);
